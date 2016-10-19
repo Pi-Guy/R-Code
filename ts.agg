@@ -27,3 +27,20 @@ sl = rnorm(n = length(dates), mean = .65, sd = .30/3.1)
 df = cbind(dates, rcvd, handled, aht, sl)
 
 b.xts = as.xts(df[, -1], order.by = dates)
+
+#combine both matrices into one
+all = rbind(a.xts, b.xts)
+
+#basic steps to complete
+
+all$wkld = all$handled * all$aht
+all$sl_thresh = all$rcvd * all$sl
+a = apply.daily(all$rcvd, sum, na.rm = TRUE)
+b = apply.daily(all$handled, sum, na.rm = TRUE)
+c = apply.daily(all$wkld, sum, na.rm = TRUE)
+d = apply.daily(all$sl_thresh, sum, na.rm = TRUE)
+agg_all = cbind(a, b, c, d)
+agg_all$aht = agg_all$wkld/agg_all$handled
+agg_all$sl = agg_all$sl_thresh/agg_all$rcvd
+drops = c("wkld", "sl_thresh")
+agg_all = agg_all[, !(names(agg_all) %in% drops)]
