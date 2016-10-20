@@ -1,93 +1,99 @@
 #load libraries
 library(xts)
 
-#The purpose of this function is to create a function that will
-#create weighted calculations in a time-series matrix.
-#For example sum(AHT * Handle)/sum(handled) = aggregated AHT
-
-#First at least 2 generic time-series matrix will need to be created
 set.seed(12822)
 dates = seq(as.Date("2016-01-01"),
             as.Date("2016-09-30"), by="days")
-rcvd = rnorm(n = length(dates), mean = 8000, sd = 650)
-aht = rnorm(n = length(dates), mean = 650, sd = 15)
-handled = rcvd - rnorm(n = length(dates), mean = 240, sd = 24)
-sl = rnorm(n = length(dates), mean = .75, sd = .25/3.1)
-asa = rnorm(n = length(dates), mean = 46, sd = 13)
-df = cbind(dates, rcvd, handled, aht, sl, asa)
+RECEIVED = rnorm(n = length(dates), mean = 8000, sd = 650)
+AHT = rnorm(n = length(dates), mean = 650, sd = 15)
+HANDLED = RECEIVED - rnorm(n = length(dates), mean = 240, sd = 24)
+SL = rnorm(n = length(dates), mean = .75, sd = .25/3.1)
+ASA = rnorm(n = length(dates), mean = 46, sd = 13)
+df = cbind(dates, RECEIVED, HANDLED, AHT, SL, ASA)
 #make sure to use as.xts as the xts() call is used to make NEW xts objects
 a.xts = as.xts(df[, -1], order.by = dates)
 
 set.seed(2)
 dates = seq(as.Date("2016-01-01"),
             as.Date("2016-09-30"), by="days")
-rcvd = rnorm(n = length(dates), mean = 4500, sd = 300)
-aht = rnorm(n = length(dates), mean = 700, sd = 20)
-handled = rcvd - rnorm(n = length(dates), mean = 135, sd = 13.5)
-sl = rnorm(n = length(dates), mean = .65, sd = .30/3.1)
-asa = rnorm(n = length(dates), mean = 60, sd = 17)
-df = cbind(dates, rcvd, handled, aht, sl, asa)
+RECEIVED = rnorm(n = length(dates), mean = 4500, sd = 300)
+AHT = rnorm(n = length(dates), mean = 700, sd = 20)
+HANDLED = RECEIVED - rnorm(n = length(dates), mean = 135, sd = 13.5)
+SL = rnorm(n = length(dates), mean = .65, sd = .30/3.1)
+ASA = rnorm(n = length(dates), mean = 60, sd = 17)
+df = cbind(dates, RECEIVED, HANDLED, AHT, SL, ASA)
 
 b.xts = as.xts(df[, -1], order.by = dates)
 
-#combine both matrices into one
 all = rbind(a.xts, b.xts)
 
-#function with controls for daily, monthly, quarterly, and yearly
+#basic steps to complete
 
 agg_cc_xts = function(x, aht, sl, asa, handled, rcvd, period = c("daily",
                                                                  "weekly",
                                                                  "monthly",
                                                                  "quarterly",
                                                                  "yearly")){
-       
-        x$wkld = x$handled * x$aht
-        x$sl_thresh = x$rcvd * x$sl
-        x$asa_calc = x$handled * x$asa       
+        
+        x$wkld = x[,handled] * x[,aht]
+        x$sl_thresh = x[,rcvd] * x[,sl]
+        x$asa_calc = x[,handled] * x[,asa]       
         if(period == "daily"){ 
-                a = apply.daily(x$rcvd, sum, na.rm = TRUE)
-                b = apply.daily(x$handled, sum, na.rm = TRUE)
+                a = apply.daily(x[,rcvd], sum, na.rm = TRUE)
+                b = apply.daily(x[,handled], sum, na.rm = TRUE)
                 c = apply.daily(x$wkld, sum, na.rm = TRUE)
                 d = apply.daily(x$sl_thresh, sum, na.rm = TRUE)
                 e = apply.daily(x$asa_calc, sum, na.rm = TRUE)
         } else {
-               if(period == "monthly"){
-                       a = apply.monthly(x$rcvd, sum, na.rm = TRUE)
-                       b = apply.monthly(x$handled, sum, na.rm = TRUE)
-                       c = apply.monthly(x$wkld, sum, na.rm = TRUE)
-                       d = apply.monthly(x$sl_thresh, sum, na.rm = TRUE)
-                       e = apply.monthly(x$asa_calc, sum, na.rm = TRUE)
-               } else {
-                       if(period == "quarterly"){
-                               a = apply.quarterly(x$rcvd, sum, na.rm = TRUE)
-                               b = apply.quarterly(x$handled, sum, na.rm = TRUE)
-                               c = apply.quarterly(x$wkld, sum, na.rm = TRUE)
-                               d = apply.quarterly(x$sl_thresh, sum, na.rm = TRUE)
-                               e = apply.quarterly(x$asa_calc, sum, na.rm = TRUE)
-                       } else {
-                               if(period == "yearly"){
-                                       a = apply.yearly(x$rcvd, sum, na.rm = TRUE)
-                                       b = apply.yearly(x$handled, sum, na.rm = TRUE)
-                                       c = apply.yearly(x$wkld, sum, na.rm = TRUE)
-                                       d = apply.yearly(x$sl_thresh, sum, na.rm = TRUE)
-                                       e = apply.yearly(x$asa_calc, sum, na.rm = TRUE)
-                               } else {
-                                       if(period == "weekly"){
-                                               a = apply.weekly(x$rcvd, sum, na.rm = TRUE)
-                                               b = apply.weekly(x$handled, sum, na.rm = TRUE)
-                                               c = apply.weekly(x$wkld, sum, na.rm = TRUE)
-                                               d = apply.weekly(x$sl_thresh, sum, na.rm = TRUE)
-                                               e = apply.weekly(x$asa_calc, sum, na.rm = TRUE)
-                                       }
-                               }
-                       }
-               }
+                if(period == "monthly"){
+                        a = apply.monthly(x[,rcvd], sum, na.rm = TRUE)
+                        b = apply.monthly(x[,handled], sum, na.rm = TRUE)
+                        c = apply.monthly(x$wkld, sum, na.rm = TRUE)
+                        d = apply.monthly(x$sl_thresh, sum, na.rm = TRUE)
+                        e = apply.monthly(x$asa_calc, sum, na.rm = TRUE)
+                } else {
+                        if(period == "quarterly"){
+                                a = apply.quarterly(x[,rcvd], sum, na.rm = TRUE)
+                                b = apply.quarterly(x[,handled], sum, na.rm = TRUE)
+                                c = apply.quarterly(x$wkld, sum, na.rm = TRUE)
+                                d = apply.quarterly(x$sl_thresh, sum, na.rm = TRUE)
+                                e = apply.quarterly(x$asa_calc, sum, na.rm = TRUE)
+                        } else {
+                                if(period == "yearly"){
+                                        a = apply.yearly(x[,rcvd], sum, na.rm = TRUE)
+                                        b = apply.yearly(x[,handled], sum, na.rm = TRUE)
+                                        c = apply.yearly(x$wkld, sum, na.rm = TRUE)
+                                        d = apply.yearly(x$sl_thresh, sum, na.rm = TRUE)
+                                        e = apply.yearly(x$asa_calc, sum, na.rm = TRUE)
+                                } else {
+                                        if(period == "weekly"){
+                                                a = apply.weekly(x[,rcvd], sum, na.rm = TRUE)
+                                                b = apply.weekly(x[,handled], sum, na.rm = TRUE)
+                                                c = apply.weekly(x$wkld, sum, na.rm = TRUE)
+                                                d = apply.weekly(x$sl_thresh, sum, na.rm = TRUE)
+                                                e = apply.weekly(x$asa_calc, sum, na.rm = TRUE)
+                                        }
+                                }
+                        }
+                }
         }
-        y = cbind(a, b, c, d, e)
-        y$aht = y$wkld/y$handled
-        y$sl = y$sl_thresh/y$rcvd
-        y$asa = y$asa_calc/y$handled
+        print(paste(length(a), class(a), length(.index(a))))
+        print(paste(length(b), class(b), length(.index(b))))
+        print(paste(length(c), class(c), length(.index(c))))
+        print(paste(length(d), class(d), length(.index(d))))
+        print(paste(length(e), class(e), length(.index(e))))
+        print(head(a))
+        print(head(b))
+        print(head(c))
+        print(head(d))
+        print(head(e))
+        y = cbind.xts(a, b, c, d, e)
+        y$aht = y$wkld/y[, handled]
+        y$sl = y$sl_thresh/y[, rcvd]
+        y$asa = y$asa_calc/y[, handled]
         drops = c("wkld", "sl_thresh", "asa_calc")
         y = y[, !(names(y) %in% drops)]
         return(y)
 }
+
+y = agg_cc_xts(all, aht = "AHT", rcvd = "RECEIVED", handled = "HANDLED", sl = "SL", asa = "ASA", period = "daily")
