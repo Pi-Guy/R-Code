@@ -77,16 +77,6 @@ agg_cc_xts = function(x, aht, sl, asa, handled, rcvd, period = c("daily",
                         }
                 }
         }
-        print(paste(length(a), class(a), length(.index(a))))
-        print(paste(length(b), class(b), length(.index(b))))
-        print(paste(length(c), class(c), length(.index(c))))
-        print(paste(length(d), class(d), length(.index(d))))
-        print(paste(length(e), class(e), length(.index(e))))
-        print(head(a))
-        print(head(b))
-        print(head(c))
-        print(head(d))
-        print(head(e))
         y = cbind.xts(a, b, c, d, e)
         y$aht = y$wkld/y[, handled]
         y$sl = y$sl_thresh/y[, rcvd]
