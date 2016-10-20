@@ -1,40 +1,10 @@
-#load libraries
-library(xts)
-
-set.seed(12822)
-dates = seq(as.Date("2016-01-01"),
-            as.Date("2016-09-30"), by="days")
-RECEIVED = rnorm(n = length(dates), mean = 8000, sd = 650)
-AHT = rnorm(n = length(dates), mean = 650, sd = 15)
-HANDLED = RECEIVED - rnorm(n = length(dates), mean = 240, sd = 24)
-SL = rnorm(n = length(dates), mean = .75, sd = .25/3.1)
-ASA = rnorm(n = length(dates), mean = 46, sd = 13)
-df = cbind(dates, RECEIVED, HANDLED, AHT, SL, ASA)
-#make sure to use as.xts as the xts() call is used to make NEW xts objects
-a.xts = as.xts(df[, -1], order.by = dates)
-
-set.seed(2)
-dates = seq(as.Date("2016-01-01"),
-            as.Date("2016-09-30"), by="days")
-RECEIVED = rnorm(n = length(dates), mean = 4500, sd = 300)
-AHT = rnorm(n = length(dates), mean = 700, sd = 20)
-HANDLED = RECEIVED - rnorm(n = length(dates), mean = 135, sd = 13.5)
-SL = rnorm(n = length(dates), mean = .65, sd = .30/3.1)
-ASA = rnorm(n = length(dates), mean = 60, sd = 17)
-df = cbind(dates, RECEIVED, HANDLED, AHT, SL, ASA)
-
-b.xts = as.xts(df[, -1], order.by = dates)
-
-all = rbind(a.xts, b.xts)
-
-#basic steps to complete
-
 agg_cc_xts = function(x, aht, sl, asa, handled, rcvd, period = c("daily",
                                                                  "weekly",
                                                                  "monthly",
                                                                  "quarterly",
                                                                  "yearly")){
         
+        require(xts)
         x$wkld = x[,handled] * x[,aht]
         x$sl_thresh = x[,rcvd] * x[,sl]
         x$asa_calc = x[,handled] * x[,asa]       
@@ -83,7 +53,6 @@ agg_cc_xts = function(x, aht, sl, asa, handled, rcvd, period = c("daily",
         y$asa = y$asa_calc/y[, handled]
         drops = c("wkld", "sl_thresh", "asa_calc")
         y = y[, !(names(y) %in% drops)]
+        colnames(y)[3:5] = c(aht, sl, asa)
         return(y)
 }
-
-y = agg_cc_xts(all, aht = "AHT", rcvd = "RECEIVED", handled = "HANDLED", sl = "SL", asa = "ASA", period = "daily")
